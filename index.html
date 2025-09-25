@@ -1,63 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Магазин Pinterest Girl</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pinterest Girl Shop</title>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-    <header>
-        <h1>Магазин Pinterest Girl</h1>
-        <nav>
-            <button id="cart-btn">Корзина 🛒 (<span id="cart-count">0</span>)</button>
-        </nav>
-    </header>
+  <header class="site-header">
+    <div class="container header-inner">
+      <h1 class="logo">Pinterest Girl</h1>
+      <nav class="main-nav" aria-label="Главное меню">
+        <ul>
+          <li><a href="#catalog">Каталог</a></li>
+          <li><a href="#about">О нас</a></li>
+        </ul>
+      </nav>
 
-    <main>
-        <section class="products">
-            <article class="product">
-                <img src="images/latte.jpg" alt="Ice Latte">
-                <h2>Ice Latte</h2>
-                <p class="price">250 ₽</p>
-                <button class="add-to-cart">Добавить в корзину</button>
-            </article>
-
-            <article class="product">
-                <img src="images/matcha.jpg" alt="Matcha Latte">
-                <h2>Matcha Latte</h2>
-                <p class="price">270 ₽</p>
-                <button class="add-to-cart">Добавить в корзину</button>
-            </article>
-        </section>
-    </main>
-
-    <!-- Модальное окно корзины -->
-    <div id="cart-modal" class="modal hidden">
-        <div class="modal-content">
-            <span id="close-cart" class="close">&times;</span>
-            <h2>Ваша корзина</h2>
-            <ul id="cart-items"></ul>
-            <p>Итого: <span id="cart-total">0</span> ₽</p>
-            <button id="checkout-btn">Оформить заказ</button>
-        </div>
+      <button id="cart-button" class="cart-btn" aria-haspopup="dialog" aria-controls="cart-panel">
+        🛒 <span id="cart-count">0</span>
+      </button>
     </div>
+  </header>
 
-    <!-- Форма заказа -->
-    <div id="order-form" class="modal hidden">
-        <div class="modal-content">
-            <span id="close-form" class="close">&times;</span>
-            <h2>Оформление заказа</h2>
-            <form>
-                <label>Имя: <input type="text" required></label>
-                <label>Фамилия: <input type="text" required></label>
-                <label>Адрес доставки: <input type="text" required></label>
-                <label>Телефон: <input type="tel" required></label>
-                <button type="submit">Создать заказ</button>
-            </form>
-        </div>
+  <main>
+    <section id="hero" class="hero">
+      <div class="container">
+        <h2>Это точно тебе необходимо</h2>
+        <!-- <p>Ice latte, matcha, свечи и аксессуары — всё в одном стиле.</p> -->
+        <a href="#catalog" class="btn">Перейти в каталог</a>
+      </div>
+    </section>
+
+    <section id="catalog" class="catalog container" aria-label="Каталог товаров">
+      <!-- карточки товаров будут вставляться JS или можно вставить вручную -->
+      <!-- Ниже пример статичной карточки (можно дублировать/генерировать) -->
+    </section>
+
+    <section id="about" class="container about">
+      <h3>О магазине</h3>
+      <p>Мини-проекта для учебы .</p>
+    </section>
+  </main>
+
+  <!-- Панель корзины -->
+  <aside id="cart-panel" class="cart-panel" aria-hidden="true" role="dialog" aria-label="Корзина">
+    <div class="cart-panel__inner">
+      <header class="cart-header">
+        <h3>Корзина</h3>
+        <button id="close-cart" aria-label="Закрыть корзину">✖</button>
+      </header>
+      <ul id="cart-items" class="cart-items">
+        <!-- элементы корзины -->
+      </ul>
+
+      <div class="cart-footer">
+        <div class="cart-total">Итого: <span id="cart-total">0 ₽</span></div>
+        <button id="checkout-btn" class="btn">Оформить заказ</button>
+      </div>
     </div>
+  </aside>
 
-    <script src="js/script.js"></script>
+  <!-- Модальное окно оформления -->
+  <div id="order-modal" class="modal" aria-hidden="true" role="dialog" aria-label="Форма заказа">
+    <div class="modal__backdrop"></div>
+    <div class="modal__content" role="document">
+      <button class="modal__close" id="close-order">✖</button>
+      <h3>Оформление заказа</h3>
+      <form id="order-form" class="order-form" novalidate>
+        <label>
+          Имя
+          <input type="text" name="firstName" required />
+        </label>
+        <label>
+          Фамилия
+          <input type="text" name="lastName" required />
+        </label>
+        <label>
+          Адрес доставки
+          <input type="text" name="address" required />
+        </label>
+        <label>
+          Контактный номер телефона
+          <input type="tel" name="phone" required pattern="[\d\s()+-]{6,}" />
+        </label>
+        <div class="order-actions">
+          <button type="submit" class="btn">Создать заказ</button>
+          <button type="button" id="cancel-order" class="btn btn--ghost">Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/script.js" defer></script>
 </body>
 </html>
