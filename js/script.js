@@ -5,7 +5,7 @@ const productlist = [
         price: 2000,
         description: "рыжий милашик",
         img: {
-            pic: 'img/orangeCat.jpg',
+            pic: 'https://github.com/mari-w-e/pin/blob/main/images/claw%20clip.jpg',
             alt: 'Рыжий котик'
         }
     },
@@ -15,7 +15,7 @@ const productlist = [
         price: 5000,
         description: "беленький как снег, мягкий как облачко",
         img: {
-            pic:'img/whiteCat.jpg',
+            pic:'https://github.com/mari-w-e/pin/blob/main/images/ice%20latte.jpg',
             alt: 'Белый котик'
         }
     }, 
@@ -25,7 +25,7 @@ const productlist = [
         price: 2500,
         description: "Сама темнота, кошачья ночная фурия",
         img: {
-            pic:'img/blackCat.jpg',
+            pic:'https://github.com/mari-w-e/pin/blob/main/images/lip%20balm.jpg',
             alt: 'Черный котик'
         }
     }
