@@ -1,236 +1,182 @@
-// ============================
-// Данные товаров (можно расширять)
-// ============================
-const products = [
-  { id: 'p1', title: 'Ice Latte', price: 220, img: 'https://picsum.photos/seed/ice/400/300' },
-  { id: 'p2', title: 'Matcha Latte', price: 240, img: 'https://picsum.photos/seed/matcha/400/300' },
-  { id: 'p3', title: 'Десерт', price: 320, img: 'https://picsum.photos/seed/dessert/400/300' },
-  { id: 'p4', title: 'Крабик для волос', price: 120, img: 'https://picsum.photos/seed/crab/400/300' },
-  { id: 'p5', title: 'Шелковая резинка', price: 90, img: 'https://picsum.photos/seed/silk/400/300' },
-  { id: 'p6', title: 'Винтажный фотоаппарат', price: 5200, img: 'https://picsum.photos/seed/camera/400/300' },
-  { id: 'p7', title: 'Бальзам для губ', price: 150, img: 'https://picsum.photos/seed/balm/400/300' },
-  { id: 'p8', title: 'Букет цветов', price: 800, img: 'https://picsum.photos/seed/flowers/400/300' },
-  { id: 'p9', title: 'Свечи', price: 360, img: 'https://picsum.photos/seed/candles/400/300' },
-  { id: 'p10', title: 'Мягкая игрушка', price: 420, img: 'https://picsum.photos/seed/toy/400/300' },
-  { id: 'p11', title: 'Кольцо', price: 1400, img: 'https://picsum.photos/seed/ring/400/300' },
-  { id: 'p12', title: 'Браслет', price: 980, img: 'https://picsum.photos/seed/bracelet/400/300' },
-];
-
-// ============================
-// Состояние корзины и DOM элементы
-// ============================
-const catalogEl = document.getElementById('catalog');
-const cartButton = document.getElementById('cart-button');
-const cartPanel = document.getElementById('cart-panel');
-const cartItemsEl = document.getElementById('cart-items');
-const cartCountEl = document.getElementById('cart-count');
-const cartTotalEl = document.getElementById('cart-total');
-const closeCartBtn = document.getElementById('close-cart');
-const checkoutBtn = document.getElementById('checkout-btn');
-
-const orderModal = document.getElementById('order-modal');
-const orderForm = document.getElementById('order-form');
-const cancelOrderBtn = document.getElementById('cancel-order');
-const closeOrderBtn = document.getElementById('close-order');
-
-let cart = {}; // структура: { productId: { id, title, price, qty, img } }
-
-// ============================
-// Инициализация: render catalog
-// ============================
-function renderCatalog() {
-  catalogEl.innerHTML = '';
-  products.forEach(p => {
-    const card = document.createElement('article');
-    card.className = 'card';
-    card.innerHTML = `
-      <img src="${p.img}" alt="${p.title}">
-      <h4>${p.title}</h4>
-      <div class="price">${p.price} ₽</div>
-      <div class="card-actions">
-        <button class="btn add-to-cart" data-id="${p.id}">Добавить в корзину</button>
-      </div>
-    `;
-    catalogEl.appendChild(card);
-  });
-}
-renderCatalog();
-
-// ============================
-// Вспомогательные: загрузка/сохранение localStorage
-// ============================
-const CART_KEY = 'pinterest_girl_cart_v1';
-
-function saveCart() {
-  localStorage.setItem(CART_KEY, JSON.stringify(cart));
-}
-
-function loadCart() {
-  const raw = localStorage.getItem(CART_KEY);
-  if (raw) {
-    try {
-      cart = JSON.parse(raw) || {};
-    } catch (e) {
-      cart = {};
-    }
-  } else {
-    cart = {};
-  }
-}
-loadCart();
-
-// ============================
-// Обновление отображения корзины
-// ============================
-function updateCartUI() {
-  // count
-  const totalQty = Object.values(cart).reduce((s, it) => s + it.qty, 0);
-  cartCountEl.textContent = totalQty;
-
-  // items
-  cartItemsEl.innerHTML = '';
-  for (const key in cart) {
-    const it = cart[key];
-    const li = document.createElement('li');
-    li.className = 'cart-item';
-    li.innerHTML = `
-      <img src="${it.img}" alt="${it.title}">
-      <div class="cart-item-info" style="flex:1">
-        <div>${it.title}</div>
-        <div class="price">${it.price} ₽</div>
-        <div class="qty-controls">
-          <button class="qty-decrease" data-id="${it.id}">−</button>
-          <span class="qty">${it.qty}</span>
-          <button class="qty-increase" data-id="${it.id}">+</button>
-          <button class="remove-item" data-id="${it.id}">Удалить</button>
-        </div>
-      </div>
-    `;
-    cartItemsEl.appendChild(li);
-  }
-
-  // total sum
-  const totalSum = Object.values(cart).reduce((s, it) => s + it.price * it.qty, 0);
-  cartTotalEl.textContent = `${totalSum} ₽`;
-
-  saveCart();
-}
-
-// ============================
-// Добавление товара
-// ============================
-catalogEl.addEventListener('click', (e) => {
-  const btn = e.target.closest('.add-to-cart');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  const product = products.find(p => p.id === id);
-  if (!product) return;
-  if (cart[id]) {
-    cart[id].qty += 1;
-  } else {
-    cart[id] = { id: product.id, title: product.title, price: product.price, qty: 1, img: product.img };
-  }
-  updateCartUI();
-});
-
-// ============================
-// Управление в корзине (удаление, изменение qty)
-// ============================
-cartItemsEl.addEventListener('click', (e) => {
-  const inc = e.target.closest('.qty-increase');
-  const dec = e.target.closest('.qty-decrease');
-  const rem = e.target.closest('.remove-item');
-
-  const id = (inc || dec || rem) && (inc || dec || rem).dataset.id;
-  if (!id) return;
-
-  if (inc) {
-    cart[id].qty += 1;
-  } else if (dec) {
-    cart[id].qty -= 1;
-    if (cart[id].qty <= 0) delete cart[id];
-  } else if (rem) {
-    delete cart[id];
-  }
-  updateCartUI();
-});
-
-// ============================
-// Открытие/закрытие панели корзины
-// ============================
-cartButton.addEventListener('click', () => {
-  const isHidden = cartPanel.getAttribute('aria-hidden') === 'true' || cartPanel.getAttribute('aria-hidden') === null;
-  cartPanel.setAttribute('aria-hidden', isHidden ? 'false' : 'true');
-});
-
-closeCartBtn.addEventListener('click', () => {
-  cartPanel.setAttribute('aria-hidden', 'true');
-});
-
-// ============================
-// Оформление заказа: открытие модалки
-// ============================
-checkoutBtn.addEventListener('click', () => {
-  orderModal.setAttribute('aria-hidden', 'false');
-});
-
-closeOrderBtn.addEventListener('click', () => {
-  orderModal.setAttribute('aria-hidden', 'true');
-});
-cancelOrderBtn.addEventListener('click', () => {
-  orderModal.setAttribute('aria-hidden', 'true');
-});
-
-// Закрытие модалки при клике на backdrop
-orderModal.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal__backdrop')) {
-    orderModal.setAttribute('aria-hidden', 'true');
-  }
-});
-
-// ============================
-// Обработка формы заказа
-// ============================
-orderForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-
-  // простая валидация: проверим, есть ли товары в корзине и поля валидны
-  const totalQty = Object.values(cart).reduce((s, it) => s + it.qty, 0);
-  if (totalQty === 0) {
-    alert('В корзине нет товаров.');
-    return;
-  }
-
-  if (!orderForm.checkValidity()) {
-    orderForm.reportValidity();
-    return;
-  }
-
-  // Можно собрать данные заказа:
-  const formData = new FormData(orderForm);
-  const orderData = {
-    buyer: {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      address: formData.get('address'),
-      phone: formData.get('phone'),
+const productlist = [
+    {
+        id: 1,
+        name: "Рыжуля",
+        price: 2000,
+        description: "рыжий милашик",
+        img: {
+            pic: 'img/orangeCat.jpg',
+            alt: 'Рыжий котик'
+        }
     },
-    items: Object.values(cart),
-    total: Object.values(cart).reduce((s, it) => s + it.price * it.qty, 0),
-    createdAt: new Date().toISOString()
-  };
+    {   
+        id: 2,
+        name: "Беляш",
+        price: 5000,
+        description: "беленький как снег, мягкий как облачко",
+        img: {
+            pic:'img/whiteCat.jpg',
+            alt: 'Белый котик'
+        }
+    }, 
+    {
+        id: 3,
+        name: "Черныш",
+        price: 2500,
+        description: "Сама темнота, кошачья ночная фурия",
+        img: {
+            pic:'img/blackCat.jpg',
+            alt: 'Черный котик'
+        }
+    }
+];
+const basket = [];
+const catalogList = document.getElementById('catalog-list');
+const buyButtons = document.querySelectorAll('.buy-button');
+const modal = document.querySelector('.modal');
+const closeModalBtn = document.querySelector('.close-button');
+const form = document.getElementById('order-form');
+const successBlock = document.querySelector('.success');
 
-  // Для учебного проекта просто показать сообщение и очистить корзину
-  console.log('Order created:', orderData);
-  alert('Заказ создан!');
+function createCard(product) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = product.id;
+    card.innerHTML = `
+        <img src="${product.img.pic}" alt="${product.img.alt}" class="card-img">
+        <h2 class="card-title">${product.name}</h2>
+        <p class="card-description">${product.description}</p>
+        <p class="card-price">Цена: ${product.price} руб.</p>
+        <button class="buy-button">Купить</button>
+    `;
+    return card;
+}
 
-  // Очистим корзину
-  cart = {};
-  updateCartUI();
-  orderForm.reset();
-  orderModal.setAttribute('aria-hidden', 'true');
+function addToBasket(product) {
+  const idx = basket.findIndex(p => p.id === product.id);
+  if (idx > -1) {
+    basket[idx].quantity = (basket[idx].quantity || 1) + 1;
+  } else {
+    basket.push({ ...product, quantity: 1 });
+  }
+  renderbasket();
+}
+
+function changeQuantity(id, delta) {
+  const idx = basket.findIndex(p => p.id === id);
+  if (idx === -1) return;
+  const current = basket[idx].quantity || 1;
+  const next = current + delta;
+  if (next <= 0) {
+    basket.splice(idx, 1);
+  } else {
+    basket[idx].quantity = next;
+  }
+  renderbasket();
+}
+
+function basketTotal() {
+  return basket.reduce((sum, item) => {
+    const q = item.quantity || 1;
+    return sum + item.price * q;
+  }, 0);
+}
+
+function bindCheckout() {
+    const checkoutButton = document.querySelector('.checkout-button');
+    if (!checkoutButton) return;
+    checkoutButton.onclick = () => {
+        if (!basket.length) return alert('Ваша корзина пуста!');
+        document.querySelector('.modal').classList.add('is-open');
+    };
+}
+
+function renderbasket() {
+    const basketList = document.querySelector('.basket-list');
+
+    const itemsHtml = basket.map(item => {
+      const q = item.quantity || 1;
+      return `
+        <li data-id="${item.id}">
+            <div class="basket-item">
+              <p>${item.name} — ${item.price} руб.</p>
+              <div class="quantity-controls">
+                  <button class="decrease" aria-label="Уменьшить">−</button>
+                  <span class="quantity">${q}</span>
+                  <button class="increase" aria-label="Увеличить">+</button>
+              </div>
+            </div>
+        </li>
+      `;
+    }).join('');
+    localStorage.setItem('basket', JSON.stringify(basket)); 
+    basketList.innerHTML = `
+        <div>
+            <ul class="basket-ul">
+            ${itemsHtml || '<li><em>Корзина пуста</em></li>'}
+            </ul>
+        </div><br>
+        <div class="price-counter">
+            <p>Общая сумма: <strong>${basketTotal()} руб.</strong></p>
+            <buttom class="checkout-button">Оформить заказ</button>
+        </div>
+      `;
+    bindCheckout();
+}
+
+localStorage.getItem('basket') && JSON.parse(localStorage.getItem('basket')).forEach(item => basket.push(item));
+renderbasket();
+
+document.addEventListener('click', (e) => {
+  const decBtn = e.target.closest('.decrease');
+  const incBtn = e.target.closest('.increase');
+  if (!decBtn && !incBtn) return;
+
+  const li = e.target.closest('li[data-id]');
+
+  if (!li) return;
+
+  const id = Number(li.getAttribute('data-id'));
+  changeQuantity(id, incBtn ? +1 : -1);
 });
 
+productlist.forEach(product => {
+    const card = createCard(product);
+    catalogList.appendChild(card);
+});
 
-// Инициализация UI при загрузке
-updateCartUI();
+buyButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        let flag = true;
+        const productId = button.parentElement.getAttribute('id');
+        const product = productlist.find(p => p.id == productId);
+        basket.forEach(itemId => { 
+            if (itemId.id == productId) { 
+                itemId.quantity = (itemId.quantity || 1) + 1; 
+                flag = false;
+            }
+        });
+        if (flag) {
+            basket.push(product);
+        }
+        renderbasket();
+    })
+});
+
+closeModalBtn.addEventListener('click', () => {
+    modal.classList.remove('is-open');
+});
+
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    successBlock.style.display = 'block';
+    form.style.display = 'none';
+    basket.length = 0;
+    renderbasket();
+    form.reset();
+});
+window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('is-open');
+    }
+});
